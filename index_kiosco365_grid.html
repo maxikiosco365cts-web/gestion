@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formularios PDF - MaxiKiosco365</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlXlh4E3ZA7EZWa1jp9g3D9NYMPA3EU6o",
+      authDomain: "maxikiosco365-cts.firebaseapp.com",
+      databaseURL: "https://maxikiosco365-cts-default-rtdb.firebaseio.com",
+      projectId: "maxikiosco365-cts",
+      storageBucket: "maxikiosco365-cts.firebasestorage.app",
+      messagingSenderId: "626205380433",
+      appId: "1:626205380433:web:3057e76c60629b89b80d70"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ────────────────────────────────────────────────────────────────
+    //  Obtener sucursal desde sessionStorage (viene del login offline)
+    // ────────────────────────────────────────────────────────────────
+    const sucursal = sessionStorage.getItem("sucursal");
+
+    if (!sucursal) {
+      alert("No se detectó sucursal. Volvé al inicio e iniciá sesión.");
+      window.location.href = "index_kiosco365.html";
+    }
+
+    const sucursalNames = {
+      unne: "Unne",
+      sarmiento: "Sarmiento",
+      alta_gracia: "Alta Gracia",
+      morgue: "Morgue"
+    };
+
+    const sucursalDisplay = sucursalNames[sucursal] || sucursal.toUpperCase();
+
+    // Ruta dinámica en Firebase según la sucursal
+    const pdfsRef = db.ref(`register/${sucursal}`);
+
+    let todosLosItems = []; // Guardamos todos los PDFs para filtrar
+
+    // ────────────────────────────────────────────────────────────────
+    //  Funcionalidad del botón Subir (sin cambios)
+    // ────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      const uploadInput = document.getElementById("upload-input");
+
+      document.getElementById("subir-link").addEventListener("click", (e) => {
+        e.preventDefault();
+        uploadInput.click();
+      });
+
+      uploadInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.type !== "application/pdf") {
+          alert("Por favor, selecciona solo archivos PDF.");
+          uploadInput.value = "";
+          return;
+        }
+
+        const filename = file.name;
+
+        if (!confirm(`¿Subir el PDF "${filename}" a la nube?`)) {
+          uploadInput.value = "";
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const response = await fetch("https://api.filebeam.xyz/", {
+            method: "POST",
+            body: formData
+          });
+
+          if (!response.ok) throw new Error("Error en la respuesta de Filebeam");
+
+          const url = await response.text();
+
+          const key = Date.now().toString();
+          await pdfsRef.child(key).set({
+            filename: filename,
+            url: url.trim()
+          });
+
+          alert(`¡PDF subido con éxito!\n"${filename}"\nEnlace: ${url.trim()}\nYa aparece en la lista.`);
+        } catch (err) {
+          console.error("Error al subir el PDF:", err);
+          alert("Error al subir el PDF. Verificá la conexión a internet o intentá más tarde.");
+        } finally {
+          uploadInput.value = "";
+        }
+      });
+
+      loadPDFs();
+    });
+
+    function loadPDFs() {
+      const grid = document.getElementById("pdf-grid");
+      const loading = document.getElementById("loading");
+
+      pdfsRef.on("value", (snapshot) => {
+        const data = snapshot.val();
+        todosLosItems = []; // Limpiamos lista anterior
+        grid.innerHTML = "";
+
+        if (!data || Object.keys(data).length === 0) {
+          grid.innerHTML = `<p style="color:#aaa; grid-column:1/-1; text-align:center; font-size:1.2em;">
+            Aún no hay PDFs registrados para ${sucursalDisplay}.
+          </p>`;
+          loading.style.display = "none";
+          return;
+        }
+
+        const items = Object.keys(data).map(key => ({
+          key,
+          filename: data[key].filename || (key + ".pdf"),
+          url: data[key].url
+        }));
+
+        items.sort((a, b) => b.key.localeCompare(a.key)); // Más reciente primero
+
+        items.forEach(item => {
+          todosLosItems.push(item); // Guardamos para filtrar
+
+          const card = document.createElement("div");
+          card.className = "pdf-card";
+          card.dataset.nombre = item.filename.toLowerCase(); // Para búsqueda rápida
+
+          const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(item.url)}&embedded=true`;
+
+          card.innerHTML = `
+            <a href="${viewerUrl}" target="_blank" class="pdf-link">
+              <img src="https://files.filebeam.xyz/1Kv8CD.png" alt="PDF" class="pdf-icon">
+              <span class="pdf-name">${item.filename}</span>
+            </a>
+            <a href="${item.url}" download="${item.filename}" class="download-btn" title="Descargar">
+              ↓ Descargar
+            </a>
+          `;
+
+          grid.appendChild(card);
+        });
+
+        loading.style.display = "none";
+      }, (error) => {
+        console.error(error);
+        grid.innerHTML = '<p style="color:#f66; grid-column:1/-1; text-align:center;">Error al cargar los PDFs: ' + error.message + '</p>';
+        loading.style.display = "none";
+      });
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    //  BUSCADOR EN TIEMPO REAL (no sensible a mayúsculas)
+    // ────────────────────────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", () => {
+      const buscador = document.getElementById("buscador");
+      const grid = document.getElementById("pdf-grid");
+
+      buscador.addEventListener("input", () => {
+        const texto = buscador.value.toLowerCase().trim();
+
+        const cards = grid.querySelectorAll(".pdf-card");
+
+        if (texto === "") {
+          cards.forEach(card => card.style.display = "");
+        } else {
+          cards.forEach(card => {
+            if (card.dataset.nombre.includes(texto)) {
+              card.style.display = "";
+            } else {
+              card.style.display = "none";
+            }
+          });
+        }
+
+        // Mensaje si no hay resultados
+        const visibles = Array.from(cards).filter(c => c.style.display !== "none");
+        if (visibles.length === 0 && texto !== "") {
+          if (!document.getElementById("no-results")) {
+            const msg = document.createElement("p");
+            msg.id = "no-results";
+            msg.style.color = "#aaa";
+            msg.style.gridColumn = "1 / -1";
+            msg.style.textAlign = "center";
+            msg.style.fontSize = "1.2em";
+            msg.textContent = "No se encontraron PDFs con ese texto.";
+            grid.appendChild(msg);
+          }
+        } else {
+          const msg = document.getElementById("no-results");
+          if (msg) msg.remove();
+        }
+      });
+    });
+  </script>
+
+  <style>
+    :root {
+      --bg: #121317;
+      --card: #1B1A1F;
+      --text: #EDEDEE;
+      --muted: #B3B3B7;
+      --radius: 16px;
+      --shadow: 0 10px 25px rgba(0,0,0,.35);
+      --primary: #4CAF50;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #121212;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+    }
+
+    nav {
+      background: var(--card);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      margin: -20px -20px 30px -20px;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-left img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .nav-right a {
+      color: var(--text);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .nav-right a:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #bb86fc;
+      margin-bottom: 30px;
+    }
+
+    #loading {
+      text-align: center;
+      color: #bb86fc;
+      font-size: 1.2em;
+      margin: 40px 0;
+    }
+
+    #pdf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .pdf-card {
+      background: #1e1e1e;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s;
+    }
+
+    .pdf-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+    }
+
+    .pdf-link {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .pdf-icon {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 15px;
+    }
+
+    .pdf-name {
+      text-align: center;
+      word-break: break-all;
+      font-size: 0.95em;
+      color: #e0e0e0;
+    }
+
+    .download-btn {
+      display: block;
+      background: #03dac6;
+      color: #121212;
+      text-align: center;
+      padding: 10px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .download-btn:hover {
+      background: #00b8a9;
+    }
+
+    /* Input oculto para subir archivo */
+    #upload-input {
+      display: none;
+    }
+
+    /* Buscador */
+    .search-wrap {
+      max-width: 600px;
+      margin: 0 auto 30px;
+      text-align: center;
+    }
+
+    #buscador {
+      width: 100%;
+      padding: 12px;
+      font-size: 1.1em;
+      border-radius: 8px;
+      border: 1px solid var(--muted);
+      background: var(--card);
+      color: var(--text);
+    }
+
+    #buscador:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(76,175,80,0.3);
+    }
+
+    @media (max-width: 768px) {
+      #pdf-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-left">
+      <img src="https://www.googleapis.com/drive/v3/files/1FjbUtXX5D1SuD5YauXC8q_qL0eMYrBY0?alt=media&key=AIzaSyAA9ERw-9LZVEohRYtCWka_TQc6oXmvcVU&supportsAllDrives=True" alt="Logo">
+      <span id="userDisplay">Cargando...</span>
+    </div>
+    <div class="nav-right">
+      <a href="index_kiosco365_tabla.html">Inicio</a>
+      <a href="index_kiosco365_form.html">Formulario</a>
+      <a href="#" id="subir-link">Subir</a>
+      <a href="index_kiosco365_about.html">Acerca de</a>
+    </div>
+  </nav>
+
+  <!-- Input oculto para seleccionar PDF -->
+  <input type="file" id="upload-input" accept="application/pdf">
+
+  <h1>Formularios Generados - MaxiKiosco365 (<span id="sucursalDisplay"></span>)</h1>
+
+  <!-- Buscador -->
+  <div class="search-wrap">
+    <input type="text" id="buscador" placeholder="Buscar... (ej: 2026, T1, David, 13, Abigail)">
+  </div>
+
+  <div id="loading">Cargando PDFs de la sucursal...</div>
+  <div id="pdf-grid"></div>
+
+  <!-- Scripts al final para evitar errores de null -->
+  <script>
+    // Mostrar nombre de sucursal en la nav y en el título (ahora seguro)
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("userDisplay").textContent = sucursalDisplay;
+      document.getElementById("sucursalDisplay").textContent = sucursalDisplay;
+    });
+  </script>
+
+</body>
+</html>

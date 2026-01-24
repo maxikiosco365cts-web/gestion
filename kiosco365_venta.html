@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Factura - Sistema de Ventas</title>
+
+  <style>
+    :root {
+      --bg-main: #0f0f11;
+      --bg-secondary: #16181d;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a5;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --border: #2a2e38;
+      --danger: #ef4444;
+      --success: #10b981;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 1.2rem 1.6rem;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header superior */
+    .header-info {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 1rem 1.3rem;
+      margin-bottom: 1.2rem;
+      display: flex;
+      gap: 2rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .info-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      min-width: 160px;
+    }
+
+    .info-label {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .info-value {
+      background: #1e2128;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 0.55rem 0.85rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      min-width: 130px;
+    }
+
+    /* Buscador */
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .search-row label {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .search-input {
+      flex: 1;
+      max-width: 300px;
+      padding: 0.6rem 0.9rem;
+      background: #1e2128;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+    }
+
+    .search-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .search-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    /* Tabla con scroll */
+    .table-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      margin-bottom: 1.2rem;
+      min-height: 200px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 0.75rem 0.9rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: #1e2128;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.86rem;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    td {
+      font-size: 0.92rem;
+    }
+
+    .total-row {
+      background: #1a1d24;
+      font-weight: bold;
+    }
+
+    .total-row td:last-child {
+      color: #fbbf24;
+      font-size: 1.05rem;
+    }
+
+    /* Barra inferior fija – más pegada al borde */
+    .footer-actions {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg-main);
+      padding: 0.8rem 0;               /* reducido de 1rem → 0.8rem */
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+      z-index: 10;
+    }
+
+    .func-keys {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .func-btn {
+      background: #2a2e38;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.84rem;
+      min-width: 46px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .func-btn:hover {
+      background: #343a45;
+      color: var(--text-primary);
+    }
+
+    .main-actions {
+      display: flex;
+      gap: 0.9rem;
+    }
+
+    .main-btn {
+      padding: 0.6rem 1.4rem;          /* altura más controlada */
+      border: none;
+      border-radius: 5px;
+      font-size: 0.94rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      line-height: 1.4;                /* para alinear mejor verticalmente */
+    }
+
+    .btn-cc { background: #8b5cf6; color: white; }
+    .btn-cc:hover { background: #a78bfa; }
+
+    .btn-aceptar { background: var(--success); color: white; }
+    .btn-aceptar:hover { background: #34d399; }
+
+    .btn-salir { background: var(--danger); color: white; }
+    .btn-salir:hover { background: #f87171; }
+
+    .grand-total {
+      background: #1e2128;
+      border: 2px solid var(--accent);
+      border-radius: 5px;
+      padding: 0.6rem 1.2rem;          /* misma altura que los botones */
+      font-size: 1.05rem;              /* reducido para que no se vea desproporcionado */
+      font-weight: bold;
+      color: #fbbf24;
+      min-width: 180px;                /* un poco más estrecho */
+      text-align: right;
+      line-height: 1.4;                /* alineación vertical perfecta */
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+<body>
+
+  <main>
+
+    <!-- Info superior -->
+    <div class="header-info">
+      <div class="info-block">
+        <div class="info-label">Factura N°</div>
+        <div class="info-value" id="nro-factura">00001234</div>
+      </div>
+      <div class="info-block">
+        <div class="info-label">Vendedor</div>
+        <div class="info-value">David UNNE #0423</div>
+      </div>
+      <div class="info-block">
+        <div class="info-label">Fecha</div>
+        <div class="info-value" id="fecha-actual">21 / 01 / 2026</div>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="search-row">
+      <label>Código:</label>
+      <input type="text" class="search-input" placeholder="Ingrese código o escanee..." />
+      <button class="search-btn">🔍 Buscar</button>
+    </div>
+
+    <!-- Tabla con scroll -->
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:75px;">Cant.</th>
+            <th style="width:115px;">Código</th>
+            <th>Descripción</th>
+            <th style="width:130px;">Marca</th>
+            <th style="width:105px; text-align:right;">Precio</th>
+            <th style="width:105px; text-align:right;">Total</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-body">
+          <!-- Ejemplos -->
+          <tr>
+            <td>2</td>
+            <td>7790895001234</td>
+            <td>Coca Cola Retornable 1.5 L</td>
+            <td>Coca-Cola</td>
+            <td style="text-align:right;">$ 2.800</td>
+            <td style="text-align:right;">$ 5.600</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>7791234567890</td>
+            <td>Papas Fritas Lay's 170g</td>
+            <td>PepsiCo</td>
+            <td style="text-align:right;">$ 1.900</td>
+            <td style="text-align:right;">$ 1.900</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- Barra inferior fija -->
+  <div class="footer-actions">
+    <div class="func-keys">
+      <button class="func-btn">*</button>
+      <button class="func-btn">F5</button>
+      <button class="func-btn">F6</button>
+      <button class="func-btn">F7</button>
+      <button class="func-btn">Supr</button>
+    </div>
+
+    <div class="main-actions">
+      <button class="main-btn btn-cc">Cuenta Corriente</button>
+      <button class="main-btn btn-aceptar">Aceptar</button>
+      <button class="main-btn btn-salir">Salir</button>
+    </div>
+
+    <div class="grand-total" id="total-general">$ 7.500</div>
+  </div>
+
+  <script>
+    function actualizarFecha() {
+      const hoy = new Date();
+      const dia = hoy.getDate().toString().padStart(2, '0');
+      const mes = (hoy.getMonth() + 1).toString().padStart(2, '0');
+      const año = hoy.getFullYear();
+      document.getElementById("fecha-actual").textContent = `${dia} / ${mes} / ${año}`;
+    }
+
+    actualizarFecha();
+  </script>
+
+</body>
+</html>

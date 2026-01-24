@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acerca de</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #121317;
+            color: #FFFFFF;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        .inner-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+        }
+
+        .info-app, .update-section, .credits-section {
+            background-color: #1C2526;
+            border-radius: 10px;
+            margin: 4px 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .app-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+
+        .app-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFFFFF;
+            margin: 4px 8px;
+        }
+
+        .web-link {
+            font-size: 14px;
+            color: #3399FF;
+            text-decoration: none;
+            margin: 2px 8px;
+            word-break: break-all;
+        }
+
+        .web-link:hover {
+            text-decoration: underline;
+        }
+
+        .update-title, .credits-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #FFFFFF;
+            margin: 8px 8px 4px;
+        }
+
+        .update-data, .credits-data {
+            font-size: 14px;
+            color: #BDBDBD;
+            margin: 4px 8px 8px;
+            text-align: left;
+            width: 100%;
+        }
+
+        .credits-data a {
+            color: #3399FF;
+            text-decoration: none;
+        }
+
+        .credits-data a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-text {
+            font-size: 16px;
+            color: #9E9E9E;
+            text-align: center;
+            margin: 8px 8px 1px;
+        }
+
+        .footer-app-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #7E57C2;
+            text-align: center;
+            margin: 1px 8px 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="inner-container">
+
+            <!-- Sección de información de la app -->
+            <div class="info-app">
+                <img src="https://www.googleapis.com/drive/v3/files/1FjbUtXX5D1SuD5YauXC8q_qL0eMYrBY0?alt=media&key=AIzaSyAA9ERw-9LZVEohRYtCWka_TQc6oXmvcVU&supportsAllDrives=True" alt="Logo" class="app-logo">
+                <h1 class="app-name">Acerca de esta herramienta</h1>
+
+                <p class="update-data" style="text-align:center;">
+                    Esta herramienta fue desarrollada con el objetivo de optimizar tareas laborales,
+                    reducir el uso de papel y centralizar la información mediante formularios digitales
+                    y generación de documentos PDF.
+                    <br><br>
+                    Está diseñada para funcionar principalmente de manera <b>offline</b>,
+                    garantizando continuidad de uso incluso sin conexión a internet,
+                    aunque también admite funcionamiento online cuando está disponible.
+                </p>
+
+                <a href="https://filebeam.xyz" class="web-link">https://filebeam.xyz</a>
+            </div>
+
+            <!-- Sección de tecnologías -->
+            <div class="update-section">
+                <h2 class="update-title">Tecnologías utilizadas</h2>
+                <p class="update-data">
+                    • <b>HTML, CSS y JavaScript</b> para la estructura y lógica general de la herramienta.<br><br>
+
+                    • <b>Bootstrap</b> para el diseño visual y la adaptación responsiva de la interfaz.<br><br>
+
+                    • <b>jsPDF</b> (integrado localmente) para la generación de documentos PDF de forma
+                    completamente offline, sin depender de servicios externos.<br><br>
+
+                    • <b>IndexedDB</b> para el almacenamiento local de datos del formulario,
+                    permitiendo conservar la información ingresada incluso ante cortes de energía
+                    o cierres inesperados del navegador.<br><br>
+
+                    • <b>Firebase Realtime Database</b> para el almacenamiento y sincronización de ciertos
+                    datos cuando se dispone de conexión a internet.
+                </p>
+            </div>
+
+            <!-- Sección de almacenamiento de archivos -->
+            <div class="update-section">
+                <h2 class="update-title">Almacenamiento de PDFs</h2>
+                <p class="update-data">
+                    Los documentos PDF generados pueden almacenarse mediante una API de almacenamiento
+                    en la nube llamada <b>FileBeam</b>.
+                    <br><br>
+                    La API recibe archivos mediante solicitudes <b>POST multipart/form-data</b>,
+                    permitiendo subir archivos de hasta <b>200 MB</b> o archivos temporales
+                    de hasta <b>1 GB</b>.
+                    <br><br>
+                    Para archivos temporales, se pueden definir tiempos de expiración como:
+                    5 minutos, 30 minutos, 1 hora, 6 horas, 12 horas o 24 horas.
+                    <br><br>
+                    Documentación oficial:
+                    <br>
+                    <a href="https://github.com/filebeam/api" target="_blank">
+                        https://github.com/filebeam/api
+                    </a>
+                </p>
+            </div>
+
+            <!-- Sección de créditos -->
+            <div class="credits-section">
+                <h2 class="credits-title">Créditos</h2>
+                <p class="credits-data">
+                    Desarrollo y diseño: <b>MILLENNIAL APPS</b><br><br>
+                    API de almacenamiento:
+                    <a href="https://filebeam.xyz" target="_blank">FileBeam</a><br><br>
+                    Librerías utilizadas:
+                    jsPDF, Bootstrap, Firebase
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Pie de página -->
+        <p class="footer-text">from</p>
+        <p class="footer-app-name">MILLENNIAL APPS</p>
+    </div>
+</body>
+</html>
