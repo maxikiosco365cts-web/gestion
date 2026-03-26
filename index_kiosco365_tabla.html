@@ -692,6 +692,96 @@
     loadEmptySlots();
   }
 
+  // ── Nueva función: Reordenar días según sucursal ───────────────────────────
+  function reorderCalendarDays() {
+    const defaultOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
+    let newOrder = [...defaultOrder];
+
+    if (sucursalCode === "alta_gracia") {
+      newOrder = ["Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo", "Lunes"];
+    } else if (sucursalCode === "sarmiento") {
+      newOrder = ["Miércoles", "Jueves", "Viernes", "Sábado", "Domingo", "Lunes", "Martes"];
+    }
+    // unne y morgue quedan igual
+
+    // ───── WEEKLY GRID ─────
+    const weeklyGrid = document.getElementById("weekly-grid");
+
+    // Guardamos la celda "Turnos" antes de cualquier remoción (es la que se movía de lugar)
+    const timeColCell = weeklyGrid.querySelector('.cell.time-col');
+
+    const headers = Array.from(weeklyGrid.querySelectorAll(".cell.header")).slice(1);
+    const columns = Array.from(weeklyGrid.querySelectorAll(".day-column")).map(col => col.parentElement);
+
+    const headerMap = {};
+    headers.forEach(h => headerMap[h.textContent.trim()] = h);
+
+    const columnMap = {};
+    columns.forEach(c => {
+      const day = c.querySelector(".day-column").dataset.day;
+      columnMap[day] = c;
+    });
+
+    // remover actuales (solo los headers y columnas de días)
+    headers.forEach(h => h.remove());
+    columns.forEach(c => c.remove());
+
+    // REINSERTAMOS LOS HEADERS DE DÍAS ENTRE EL HEADER VACÍO Y LA CELDA "Turnos"
+    // Esto corrige el bug: "Turnos" ya no se mueve a la posición del primer día
+    newOrder.forEach(day => {
+      weeklyGrid.insertBefore(headerMap[day], timeColCell);
+    });
+
+    // Luego agregamos las columnas de días al final (después de "Turnos")
+    newOrder.forEach(day => {
+      weeklyGrid.appendChild(columnMap[day]);
+    });
+
+    // ───── PREVENTISTAS GRID ─────
+    const prevGrid = document.querySelector(".preventistas-grid");
+
+    const prevHeaders = Array.from(prevGrid.querySelectorAll(".cell.header")).slice(1);
+
+    const prevHeaderMap = {};
+    prevHeaders.forEach(h => prevHeaderMap[h.textContent.trim()] = h);
+
+    prevHeaders.forEach(h => h.remove());
+
+    newOrder.forEach(day => {
+      prevGrid.insertBefore(prevHeaderMap[day], prevGrid.children[1]);
+    });
+
+    // filas (inputs)
+    const rows = [];
+    let temp = [];
+
+    Array.from(prevGrid.children).slice(8).forEach((el, i) => {
+      temp.push(el);
+      if (temp.length === 8) {
+        rows.push(temp);
+        temp = [];
+      }
+    });
+
+    rows.forEach(row => {
+      const label = row[0];
+      const inputs = row.slice(1);
+
+      const inputMap = {};
+      inputs.forEach(inputCell => {
+        const input = inputCell.querySelector("input");
+        inputMap[input.dataset.day] = inputCell;
+      });
+
+      inputs.forEach(c => c.remove());
+
+      newOrder.forEach(day => {
+        label.after(inputMap[day]);
+      });
+    });
+  }
+
   // ── Drag & Drop (calendario semanal) ───────────────────────────────────────
   document.querySelectorAll('.day-column').forEach(column => {
     column.addEventListener('dragover', e => {
@@ -867,8 +957,9 @@
   // ── Inicialización ──────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     initEmptySlots();
+    reorderCalendarDays(); // ← Cambio agregado
   });
 </script>
 
 </body>
-</html>
+  </html>
