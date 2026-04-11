@@ -89,23 +89,20 @@
       margin-left: 10px;
     }
 
-    /* Grid base (usado por ambos calendarios) */
-    
     .grid {
       display: grid;
-      grid-template-columns: 60px repeat(7, minmax(130px, 1fr));  /* mínimo 130px por día */
+      grid-template-columns: 60px repeat(7, minmax(130px, 1fr));
       gap: 0;
       border: 1px solid #444;
       border-radius: var(--radius);
-      overflow-x: auto;           /* ← scroll horizontal si no cabe todo */
+      overflow-x: auto;
       overflow-y: hidden;
       box-shadow: var(--shadow);
       background: var(--card);
       margin-bottom: 30px;
-      max-width: 100%;            /* no se salga del container */
+      max-width: 100%;
     }
 
-    /* Estilos específicos del calendario semanal nuevo */
     #weekly-grid .cell {
       background: var(--card);
       border: 1px solid #333;
@@ -154,10 +151,10 @@
       flex-direction: column;
       justify-content: center;
       transition: all 0.25s ease;
-      width: 100%;                /* ← ocupa todo el ancho disponible */
-      max-width: 140px;           /* ← tope para que no se haga gigante */
+      width: 100%;
+      max-width: 140px;
       height: 60px;
-      margin: 0 auto;             /* ← centra el slot dentro de la celda */
+      margin: 0 auto;
       box-sizing: border-box;
     }
 
@@ -188,27 +185,10 @@
       opacity: 1;
     }
 
-    #weekly-grid .edit-btn {
-      position: absolute;
-      bottom: 6px;
-      right: 6px;
-      background: none;
-      border: none;
-      color: var(--edit);
-      font-size: 16px;
-      cursor: pointer;
-      opacity: 0.8;
-    }
-
-    #weekly-grid .edit-btn:hover {
-      opacity: 1;
-    }
-
     #weekly-grid .day-column.drag-over {
       background: rgba(76,175,80,0.15);
     }
 
-    /* Zona inferior alineada horizontalmente */
     .bottom-controls {
       margin-top: 30px;
       display: flex;
@@ -256,7 +236,6 @@
       transform: translateY(-1px);
     }
 
-    /* Employee section ajustado para alineación */
     #employee-section {
       background: var(--card);
       border-radius: var(--radius);
@@ -301,7 +280,6 @@
       color: var(--muted);
     }
 
-    /* Botones dentro de los slots inferiores (X y E) */
     #empty-slots .delete-btn {
       position: absolute;
       background: transparent;
@@ -325,7 +303,6 @@
       opacity: 1;
     }
 
-    /* Estilos para preventistas */
     .preventistas-grid .cell {
       min-height: 50px;
       padding: 6px;
@@ -349,7 +326,6 @@
       background: rgba(76, 175, 80, 0.15);
     }
 
-    /* Botones de preventistas uno al lado del otro */
     .preventistas-controls {
       margin: 20px 0 40px;
       display: flex;
@@ -358,7 +334,7 @@
     }
 
     .preventistas-controls .control-btn {
-      width: 160px; /* un poco más anchos para que queden bien */
+      width: 160px;
     }
   </style>
 </head>
@@ -402,7 +378,6 @@
     <div class="cell"><div class="day-column" data-day="Domingo"></div></div>
   </div>
 
-  <!-- Zona inferior -->
   <div class="bottom-controls">
     <div class="buttons-column">
       <button class="control-btn green" id="save-button">Guardar</button>
@@ -414,7 +389,6 @@
     </div>
   </div>
 
-  <!-- Preventistas -->
   <h2>Preventistas Semanal <span id="ultimo-guardado-preventistas"></span></h2>
   <div class="grid preventistas-grid">
     <div class="cell header"></div>
@@ -549,7 +523,6 @@
   document.getElementById("userDisplay").textContent = 
     (sucursalNames[sucursalCode] || sucursalCode.toUpperCase()) + " (" + accessKey + ")";
 
-  // ── LOCALSTORAGE para los 5 slots inferiores ───────────────────────────────
   const SLOTS_KEY = 'kiosco365_empty_slots';
 
   function saveEmptySlots() {
@@ -582,7 +555,6 @@
       slot.style.border = '1px solid var(--primary)';
       slot.draggable = true;
 
-      // Configurar evento dragstart para slots cargados
       setupSlotDragEvents(slot, name);
 
       slot.querySelector('.delete-btn').onclick = e => {
@@ -600,7 +572,6 @@
         const newName = prompt("Nuevo nombre:", current);
         if (newName && newName.trim() !== current) {
           slot.querySelector('.slot-name').textContent = newName.trim();
-          // Actualizar eventos de arrastre con el nuevo nombre
           setupSlotDragEvents(slot, newName.trim());
           saveEmptySlots();
         }
@@ -608,23 +579,16 @@
     });
   }
 
-  // ── Función auxiliar para configurar eventos de drag en slots ──────────────
   function setupSlotDragEvents(slot, name) {
     slot.addEventListener('dragstart', e => {
       e.dataTransfer.setData('text/plain', name);
       e.dataTransfer.effectAllowed = 'copy';
-      // Para mejorar la experiencia visual durante el arrastre
-      setTimeout(() => {
-        slot.style.opacity = '0.4';
-      }, 0);
+      setTimeout(() => slot.style.opacity = '0.4', 0);
     });
 
-    slot.addEventListener('dragend', () => {
-      slot.style.opacity = '1';
-    });
+    slot.addEventListener('dragend', () => slot.style.opacity = '1');
   }
 
-  // ── 5 slots editables abajo ────────────────────────────────────────────────
   function initEmptySlots() {
     const container = document.getElementById('empty-slots');
     container.innerHTML = '';
@@ -640,7 +604,6 @@
           const newName = prompt("Nuevo nombre:", current);
           if (newName && newName.trim() !== current) {
             slot.querySelector('.slot-name').textContent = newName.trim();
-            // Actualizar eventos de arrastre
             setupSlotDragEvents(slot, newName.trim());
             saveEmptySlots();
           }
@@ -658,7 +621,6 @@
           slot.style.border = '1px solid var(--primary)';
           slot.draggable = true;
 
-          // Configurar eventos de arrastre
           setupSlotDragEvents(slot, trimmedName);
 
           slot.querySelector('.delete-btn').onclick = e => {
@@ -676,7 +638,6 @@
             const newName = prompt("Nuevo nombre:", current);
             if (newName && newName.trim() !== current) {
               slot.querySelector('.slot-name').textContent = newName.trim();
-              // Actualizar eventos de arrastre
               setupSlotDragEvents(slot, newName.trim());
               saveEmptySlots();
             }
@@ -692,23 +653,15 @@
     loadEmptySlots();
   }
 
-  // ── Nueva función: Reordenar días según sucursal ───────────────────────────
   function reorderCalendarDays() {
     const defaultOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-
     let newOrder = [...defaultOrder];
 
-    if (sucursalCode === "alta_gracia") {
-      newOrder = ["Miércoles", "Jueves", "Viernes", "Sábado", "Domingo", "Lunes", "Martes"];
-    } else if (sucursalCode === "sarmiento") {
+    if (sucursalCode === "alta_gracia" || sucursalCode === "sarmiento") {
       newOrder = ["Miércoles", "Jueves", "Viernes", "Sábado", "Domingo", "Lunes", "Martes"];
     }
-    // unne y morgue quedan igual
 
-    // ───── WEEKLY GRID ─────
     const weeklyGrid = document.getElementById("weekly-grid");
-
-    // Guardamos la celda "Turnos" antes de cualquier remoción (es la que se movía de lugar)
     const timeColCell = weeklyGrid.querySelector('.cell.time-col');
 
     const headers = Array.from(weeklyGrid.querySelectorAll(".cell.header")).slice(1);
@@ -723,40 +676,24 @@
       columnMap[day] = c;
     });
 
-    // remover actuales (solo los headers y columnas de días)
     headers.forEach(h => h.remove());
     columns.forEach(c => c.remove());
 
-    // REINSERTAMOS LOS HEADERS DE DÍAS ENTRE EL HEADER VACÍO Y LA CELDA "Turnos"
-    // Esto corrige el bug: "Turnos" ya no se mueve a la posición del primer día
-    newOrder.forEach(day => {
-      weeklyGrid.insertBefore(headerMap[day], timeColCell);
-    });
+    newOrder.forEach(day => weeklyGrid.insertBefore(headerMap[day], timeColCell));
+    newOrder.forEach(day => weeklyGrid.appendChild(columnMap[day]));
 
-    // Luego agregamos las columnas de días al final (después de "Turnos")
-    newOrder.forEach(day => {
-      weeklyGrid.appendChild(columnMap[day]);
-    });
-
-    // ───── PREVENTISTAS GRID ─────
+    // Reordenar preventistas
     const prevGrid = document.querySelector(".preventistas-grid");
-
     const prevHeaders = Array.from(prevGrid.querySelectorAll(".cell.header")).slice(1);
-
     const prevHeaderMap = {};
     prevHeaders.forEach(h => prevHeaderMap[h.textContent.trim()] = h);
-
     prevHeaders.forEach(h => h.remove());
 
-    newOrder.forEach(day => {
-      prevGrid.insertBefore(prevHeaderMap[day], prevGrid.children[1]);
-    });
+    newOrder.forEach(day => prevGrid.insertBefore(prevHeaderMap[day], prevGrid.children[1]));
 
-    // filas (inputs)
     const rows = [];
     let temp = [];
-
-    Array.from(prevGrid.children).slice(8).forEach((el, i) => {
+    Array.from(prevGrid.children).slice(8).forEach(el => {
       temp.push(el);
       if (temp.length === 8) {
         rows.push(temp);
@@ -767,22 +704,17 @@
     rows.forEach(row => {
       const label = row[0];
       const inputs = row.slice(1);
-
       const inputMap = {};
       inputs.forEach(inputCell => {
         const input = inputCell.querySelector("input");
         inputMap[input.dataset.day] = inputCell;
       });
-
       inputs.forEach(c => c.remove());
-
-      newOrder.forEach(day => {
-        label.after(inputMap[day]);
-      });
+      newOrder.forEach(day => label.after(inputMap[day]));
     });
   }
 
-  // ── Drag & Drop (calendario semanal) ───────────────────────────────────────
+  // ── Drag & Drop ─────────────────────────────────────────────────────────────
   document.querySelectorAll('.day-column').forEach(column => {
     column.addEventListener('dragover', e => {
       e.preventDefault();
@@ -805,9 +737,7 @@
         slot.className = 'slot';
         slot.innerHTML = `
           <div class="slot-name">${name}</div>
-          <div class="slot-hours">${
-            count === 0 ? '16 horas' : count === 1 ? '12 horas' : '8 horas'
-          }</div>
+          <div class="slot-hours">${count === 0 ? '12 horas' : '8 horas'}</div>
           <button class="delete-btn">×</button>
         `;
 
@@ -826,17 +756,35 @@
   });
 
   function updateSlotsLayout(column) {
-    const slots = column.querySelectorAll('.slot');
+    const slots = Array.from(column.querySelectorAll('.slot'));
     const count = slots.length;
+
     slots.forEach(slot => {
-      const h = slot.querySelector('.slot-hours');
-      if (count === 1) { h.textContent = '16 horas'; slot.style.flex = '2'; }
-      else if (count === 2) { h.textContent = '12 horas'; slot.style.flex = '1'; }
-      else if (count === 3) { h.textContent = '8 horas'; slot.style.flex = '1'; }
+      const hoursEl = slot.querySelector('.slot-hours');
+      
+      if (count === 1) {
+        hoursEl.textContent = '12 horas';
+        slot.style.flex = '1';
+      } 
+      else if (count === 2) {
+        hoursEl.textContent = '12 horas';
+        slot.style.flex = '1';
+      } 
+      else if (count === 3) {
+        hoursEl.textContent = '8 horas';
+        slot.style.flex = '1';
+      }
     });
+
+    // Forzar que los slots ocupen todo el espacio vertical cuando hay 1 o 2
+    if (count === 1 || count === 2) {
+      column.style.display = 'flex';
+      column.style.flexDirection = 'column';
+      column.style.gap = '8px';
+    }
   }
 
-  // ── Firebase ────────────────────────────────────────────────────────────────
+  // ── Firebase Load ───────────────────────────────────────────────────────────
   const scheduleRef = ref(db, `${sucursalCode}/weekly_schedule`);
 
   onValue(scheduleRef, snap => {
@@ -848,25 +796,27 @@
       col.innerHTML = '';
       const day = col.dataset.day;
       const turns = data[day] || [];
+
       turns.forEach((name, idx) => {
         if (name && name.trim()) {
           const slot = document.createElement('div');
           slot.className = 'slot';
+          const isTwoSlots = turns.filter(n => n && n.trim()).length === 2;
+          
           slot.innerHTML = `
             <div class="slot-name">${name}</div>
-            <div class="slot-hours">${
-              idx === 0 ? '16 horas' : idx === 1 ? '12 horas' : '8 horas'
-            }</div>
+            <div class="slot-hours">${isTwoSlots ? '12 horas' : '8 horas'}</div>
             <button class="delete-btn">×</button>
           `;
+          
           slot.querySelector('.delete-btn').onclick = () => {
             slot.remove();
             updateSlotsLayout(col);
           };
           col.appendChild(slot);
-          updateSlotsLayout(col);
         }
       });
+      updateSlotsLayout(col);
     });
   });
 
@@ -906,7 +856,7 @@
     }
   };
 
-  // ── Preventistas ────────────────────────────────────────────────────────────
+  // Preventistas (sin cambios)
   const preventistasRef = ref(db, `${sucursalCode}/preventistas_schedule`);
 
   onValue(preventistasRef, snap => {
@@ -954,12 +904,11 @@
     }
   };
 
-  // ── Inicialización ──────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     initEmptySlots();
-    reorderCalendarDays(); // ← Cambio agregado
+    reorderCalendarDays();
   });
 </script>
 
 </body>
-  </html>
+                        </html>
