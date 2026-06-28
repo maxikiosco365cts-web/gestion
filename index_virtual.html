@@ -174,71 +174,6 @@
       opacity: 0.6;
       cursor: not-allowed;
     }
-
-    /* CONTROLES */
-    .controls-wrapper {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 1rem;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .date-input-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      background: var(--btn-dark);
-      padding: 0.4rem 1rem;
-      border-radius: 40px;
-      border: 1px solid var(--border-light);
-    }
-
-    .date-input-wrapper label {
-      color: var(--text);
-      font-weight: 500;
-      font-size: 0.85rem;
-    }
-
-    .date-input-wrapper input {
-      background: var(--card);
-      border: 1px solid var(--primary);
-      border-radius: 30px;
-      padding: 0.4rem 0.8rem;
-      color: var(--text);
-      font-family: inherit;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-
-    .week-finish-btn {
-      background: var(--btn-dark);
-      border: 1.5px solid var(--primary);
-      border-radius: 40px;
-      padding: 0.6rem 1.5rem;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--primary);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-family: inherit;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .week-finish-btn:hover:not(:disabled) {
-      background: var(--primary);
-      color: var(--card);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-    }
-
-    .week-finish-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
   </style>
 </head>
 <body>
@@ -267,14 +202,14 @@
     const d = String(date.getDate()).padStart(2,'0');
     const m = String(date.getMonth()+1).padStart(2,'0');
     const y = date.getFullYear();
-    return `${d}/${m}/${y}`;
+    return `\( {d}/ \){m}/${y}`;
   }
   
   function formatDateForFilename(date) {
     const d = String(date.getDate()).padStart(2,'0');
     const m = String(date.getMonth()+1).padStart(2,'0');
     const y = date.getFullYear();
-    return `${d}_${m}_${y}`;
+    return `\( {d}_ \){m}_${y}`;
   }
   
   function addDays(date, days) {
@@ -297,15 +232,24 @@
   function formatNumberWithDots(value) {
     if (value === '' || value === null || value === undefined) return '';
     const numStr = String(value).replace(/\./g, '');
-    if (!/^\d*$/.test(numStr)) return value;
-    if (numStr === '') return '';
-    const num = parseInt(numStr, 10);
-    if (isNaN(num)) return '';
-    return num.toLocaleString('es-AR');
+    // Permitir signo negativo
+    if (!/^-?\d*$/.test(numStr)) return value;
+    if (numStr === '' || numStr === '-') return numStr;
+    
+    const isNegative = numStr.startsWith('-');
+    const absStr = isNegative ? numStr.slice(1) : numStr;
+    if (absStr === '') return isNegative ? '-' : '';
+    
+    const num = parseInt(absStr, 10);
+    if (isNaN(num)) return value;
+    
+    const formatted = num.toLocaleString('es-AR');
+    return isNegative ? '-' + formatted : formatted;
   }
   
   function cleanNumber(value) {
     if (value === '' || value === null || value === undefined) return '';
+    // Mantener el signo negativo y eliminar puntos
     return String(value).replace(/\./g, '');
   }
   
@@ -314,14 +258,15 @@
   }
   
   function validateNumbersOnly(value) {
-    return /^\d*$/.test(value);
+    // Permitir números con signo negativo opcional (solo al principio)
+    return /^-?\d*$/.test(value);
   }
   
   function clearAllCellsData() {
     for(let blockIdx = 0; blockIdx < 7; blockIdx++) {
       for(let row = 0; row < 3; row++) {
         for(let col = 0; col < 6; col++) {
-          localStorage.removeItem(`b${blockIdx}_r${row}_c${col}`);
+          localStorage.removeItem(`b\( {blockIdx}_r \){row}_c${col}`);
         }
       }
     }
@@ -394,7 +339,7 @@
     
     function applyFormattingAndSave() {
       if(!enabled) return;
-      let rawValue = input.value;
+      let rawValue = input.value.trim();
       let finalValue = '';
       
       if (colIndex === 0) {
@@ -406,9 +351,10 @@
           input.value = finalValue;
         }
       } else {
+        // Para números: limpiar y validar
         const clean = rawValue.replace(/\./g, '');
-        if (validateNumbersOnly(clean)) {
-          if (clean !== '') {
+        if (validateNumbersOnly(clean) && clean !== '-') {
+          if (clean !== '' && clean !== '-') {
             finalValue = clean;
             input.value = formatNumberWithDots(clean);
           } else {
@@ -416,12 +362,13 @@
             input.value = '';
           }
         } else {
+          // Restaurar valor anterior si inválido
           finalValue = originalCleanValue || '';
           input.value = originalCleanValue ? formatNumberWithDots(originalCleanValue) : '';
         }
       }
       
-      localStorage.setItem(`b${blockIdx}_r${rowIdx}_c${colIdx}`, colIndex === 0 ? finalValue : cleanNumber(finalValue));
+      localStorage.setItem(`b\( {blockIdx}_r \){rowIdx}_c${colIdx}`, colIndex === 0 ? finalValue : cleanNumber(finalValue));
       originalCleanValue = colIndex === 0 ? finalValue : cleanNumber(finalValue);
       input.style.outline = 'none';
       input.style.background = 'transparent';
@@ -448,7 +395,7 @@
       nextRow++;
       if (nextRow >= 3) return;
     }
-    const targetCell = document.querySelector(`.cell[data-block="${blockIdx}"][data-row="${nextRow}"][data-col="${nextCol}"]`);
+    const targetCell = document.querySelector(`.cell[data-block="\( {blockIdx}"][data-row=" \){nextRow}"][data-col="${nextCol}"]`);
     if (targetCell) {
       const targetInput = targetCell.querySelector('input');
       if (targetInput) { targetInput.focus(); targetInput.select(); }
@@ -458,7 +405,7 @@
   function getCellsHTML(rowIndex, blockIndex) {
     let html = '';
     for (let col = 0; col < 6; col++) {
-      html += `<div class="cell" data-block="${blockIndex}" data-row="${rowIndex}" data-col="${col}"></div>`;
+      html += `<div class="cell" data-block="\( {blockIndex}" data-row=" \){rowIndex}" data-col="${col}"></div>`;
     }
     return html;
   }
@@ -476,7 +423,7 @@
     return `
       <div class="global-titles">
         <div class="title-badge"></div>
-        ${columnTitles.map(t => `<div class="title-badge">${t}</div>`).join('')}
+        \( {columnTitles.map(t => `<div class="title-badge"> \){t}</div>`).join('')}
       </div>
     `;
   }
@@ -510,9 +457,9 @@
     for(let blockIdx=0; blockIdx<blocksData.length; blockIdx++) {
       for(let row=0; row<3; row++) {
         for(let col=0; col<6; col++) {
-          const cell = document.querySelector(`.cell[data-block="${blockIdx}"][data-row="${row}"][data-col="${col}"]`);
+          const cell = document.querySelector(`.cell[data-block="\( {blockIdx}"][data-row=" \){row}"][data-col="${col}"]`);
           if(cell && !cell.hasAttribute('data-converted')) {
-            const savedValue = localStorage.getItem(`b${blockIdx}_r${row}_c${col}`) || '';
+            const savedValue = localStorage.getItem(`b\( {blockIdx}_r \){row}_c${col}`) || '';
             const input = createCellInput(col, savedValue, blockIdx, row, col, hasValidDate);
             cell.innerHTML = '';
             cell.appendChild(input);
@@ -599,7 +546,7 @@
     
     pdf.addImage(imgData, 'PNG', startX, startY, finalWidth, finalHeight);
     
-    const filename = `${formatDateForFilename(firstDate)}_a_${formatDateForFilename(lastDate)}.pdf`;
+    const filename = `\( {formatDateForFilename(firstDate)}_a_ \){formatDateForFilename(lastDate)}.pdf`;
     pdf.save(filename);
     
     // Limpiar todo
@@ -668,7 +615,7 @@
         const y = blocksData[0].date.getFullYear();
         const m = String(blocksData[0].date.getMonth() + 1).padStart(2, '0');
         const d = String(blocksData[0].date.getDate()).padStart(2, '0');
-        dateInput.value = `${y}-${m}-${d}`;
+        dateInput.value = `\( {y}- \){m}-${d}`;
       }
     }
     
@@ -680,4 +627,4 @@
   initialize();
 </script>
 </body>
-</html>
+  </html>
