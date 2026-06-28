@@ -35,7 +35,6 @@
       padding: 1.5rem;
     }
 
-    /* PANEL PRINCIPAL */
     .dark-panel {
       background: var(--card);
       border-radius: var(--radius);
@@ -46,7 +45,6 @@
       max-width: 1400px;
     }
 
-    /* CONTENEDOR DE BLOQUES CON SCROLL */
     .blocks-container {
       max-height: 60vh;
       overflow-y: auto;
@@ -67,7 +65,6 @@
       border-radius: 10px;
     }
 
-    /* CADA BLOQUE (DÍA) - SIN CONTENEDORES EXTRA */
     .block {
       margin-bottom: 1rem;
       background: rgba(0, 0, 0, 0.2);
@@ -76,7 +73,6 @@
       border: 1px solid var(--border-med);
     }
 
-    /* ENCABEZADO DEL BLOQUE CON FECHA */
     .block-header {
       margin-bottom: 0.5rem;
       padding-bottom: 0.3rem;
@@ -95,7 +91,6 @@
       display: inline-block;
     }
 
-    /* TÍTULOS GLOBALES */
     .global-titles {
       display: grid;
       grid-template-columns: 55px repeat(6, 1fr);
@@ -116,7 +111,6 @@
       letter-spacing: 0.3px;
     }
 
-    /* FILAS DE CELDAS */
     .row-cells {
       display: grid;
       grid-template-columns: 55px repeat(6, 1fr);
@@ -124,7 +118,6 @@
       margin-bottom: 0.4rem;
     }
 
-    /* CELDAS MÁS PEQUEÑAS */
     .cell {
       background: #121317;
       border-radius: 6px;
@@ -174,6 +167,70 @@
       opacity: 0.6;
       cursor: not-allowed;
     }
+
+    .controls-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .date-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--btn-dark);
+      padding: 0.4rem 1rem;
+      border-radius: 40px;
+      border: 1px solid var(--border-light);
+    }
+
+    .date-input-wrapper label {
+      color: var(--text);
+      font-weight: 500;
+      font-size: 0.85rem;
+    }
+
+    .date-input-wrapper input {
+      background: var(--card);
+      border: 1px solid var(--primary);
+      border-radius: 30px;
+      padding: 0.4rem 0.8rem;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .week-finish-btn {
+      background: var(--btn-dark);
+      border: 1.5px solid var(--primary);
+      border-radius: 40px;
+      padding: 0.6rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .week-finish-btn:hover:not(:disabled) {
+      background: var(--primary);
+      color: var(--card);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    }
+
+    .week-finish-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -202,14 +259,14 @@
     const d = String(date.getDate()).padStart(2,'0');
     const m = String(date.getMonth()+1).padStart(2,'0');
     const y = date.getFullYear();
-    return `\( {d}/ \){m}/${y}`;
+    return `${d}/${m}/${y}`;
   }
   
   function formatDateForFilename(date) {
     const d = String(date.getDate()).padStart(2,'0');
     const m = String(date.getMonth()+1).padStart(2,'0');
     const y = date.getFullYear();
-    return `\( {d}_ \){m}_${y}`;
+    return `${d}_${m}_${y}`;
   }
   
   function addDays(date, days) {
@@ -232,24 +289,19 @@
   function formatNumberWithDots(value) {
     if (value === '' || value === null || value === undefined) return '';
     const numStr = String(value).replace(/\./g, '');
-    // Permitir signo negativo
-    if (!/^-?\d*$/.test(numStr)) return value;
-    if (numStr === '' || numStr === '-') return numStr;
-    
+    // Permitir el signo negativo al inicio
     const isNegative = numStr.startsWith('-');
-    const absStr = isNegative ? numStr.slice(1) : numStr;
-    if (absStr === '') return isNegative ? '-' : '';
-    
-    const num = parseInt(absStr, 10);
-    if (isNaN(num)) return value;
-    
+    const cleanNum = isNegative ? numStr.substring(1) : numStr;
+    if (!/^\d*$/.test(cleanNum)) return value;
+    if (cleanNum === '') return isNegative ? '-' : '';
+    const num = parseInt(cleanNum, 10);
+    if (isNaN(num)) return '';
     const formatted = num.toLocaleString('es-AR');
     return isNegative ? '-' + formatted : formatted;
   }
   
   function cleanNumber(value) {
     if (value === '' || value === null || value === undefined) return '';
-    // Mantener el signo negativo y eliminar puntos
     return String(value).replace(/\./g, '');
   }
   
@@ -257,8 +309,8 @@
     return /^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]*$/.test(value);
   }
   
-  function validateNumbersOnly(value) {
-    // Permitir números con signo negativo opcional (solo al principio)
+  function validateNumberWithNegative(value) {
+    // Permite números con signo negativo opcional al inicio
     return /^-?\d*$/.test(value);
   }
   
@@ -266,7 +318,7 @@
     for(let blockIdx = 0; blockIdx < 7; blockIdx++) {
       for(let row = 0; row < 3; row++) {
         for(let col = 0; col < 6; col++) {
-          localStorage.removeItem(`b\( {blockIdx}_r \){row}_c${col}`);
+          localStorage.removeItem(`b${blockIdx}_r${row}_c${col}`);
         }
       }
     }
@@ -322,7 +374,7 @@
       input.value = '';
     }
     
-    const validate = colIndex === 0 ? validateLettersOnly : validateNumbersOnly;
+    const validate = colIndex === 0 ? validateLettersOnly : validateNumberWithNegative;
     let originalCleanValue = colIndex === 0 ? initialValue : cleanNumber(initialValue);
     
     input.addEventListener('input', function() {
@@ -339,7 +391,7 @@
     
     function applyFormattingAndSave() {
       if(!enabled) return;
-      let rawValue = input.value.trim();
+      let rawValue = input.value;
       let finalValue = '';
       
       if (colIndex === 0) {
@@ -351,9 +403,9 @@
           input.value = finalValue;
         }
       } else {
-        // Para números: limpiar y validar
+        // Eliminar puntos para procesar
         const clean = rawValue.replace(/\./g, '');
-        if (validateNumbersOnly(clean) && clean !== '-') {
+        if (validateNumberWithNegative(clean)) {
           if (clean !== '' && clean !== '-') {
             finalValue = clean;
             input.value = formatNumberWithDots(clean);
@@ -362,13 +414,12 @@
             input.value = '';
           }
         } else {
-          // Restaurar valor anterior si inválido
           finalValue = originalCleanValue || '';
           input.value = originalCleanValue ? formatNumberWithDots(originalCleanValue) : '';
         }
       }
       
-      localStorage.setItem(`b\( {blockIdx}_r \){rowIdx}_c${colIdx}`, colIndex === 0 ? finalValue : cleanNumber(finalValue));
+      localStorage.setItem(`b${blockIdx}_r${rowIdx}_c${colIdx}`, colIndex === 0 ? finalValue : cleanNumber(finalValue));
       originalCleanValue = colIndex === 0 ? finalValue : cleanNumber(finalValue);
       input.style.outline = 'none';
       input.style.background = 'transparent';
@@ -395,7 +446,7 @@
       nextRow++;
       if (nextRow >= 3) return;
     }
-    const targetCell = document.querySelector(`.cell[data-block="\( {blockIdx}"][data-row=" \){nextRow}"][data-col="${nextCol}"]`);
+    const targetCell = document.querySelector(`.cell[data-block="${blockIdx}"][data-row="${nextRow}"][data-col="${nextCol}"]`);
     if (targetCell) {
       const targetInput = targetCell.querySelector('input');
       if (targetInput) { targetInput.focus(); targetInput.select(); }
@@ -405,7 +456,7 @@
   function getCellsHTML(rowIndex, blockIndex) {
     let html = '';
     for (let col = 0; col < 6; col++) {
-      html += `<div class="cell" data-block="\( {blockIndex}" data-row=" \){rowIndex}" data-col="${col}"></div>`;
+      html += `<div class="cell" data-block="${blockIndex}" data-row="${rowIndex}" data-col="${col}"></div>`;
     }
     return html;
   }
@@ -423,7 +474,7 @@
     return `
       <div class="global-titles">
         <div class="title-badge"></div>
-        \( {columnTitles.map(t => `<div class="title-badge"> \){t}</div>`).join('')}
+        ${columnTitles.map(t => `<div class="title-badge">${t}</div>`).join('')}
       </div>
     `;
   }
@@ -457,9 +508,9 @@
     for(let blockIdx=0; blockIdx<blocksData.length; blockIdx++) {
       for(let row=0; row<3; row++) {
         for(let col=0; col<6; col++) {
-          const cell = document.querySelector(`.cell[data-block="\( {blockIdx}"][data-row=" \){row}"][data-col="${col}"]`);
+          const cell = document.querySelector(`.cell[data-block="${blockIdx}"][data-row="${row}"][data-col="${col}"]`);
           if(cell && !cell.hasAttribute('data-converted')) {
-            const savedValue = localStorage.getItem(`b\( {blockIdx}_r \){row}_c${col}`) || '';
+            const savedValue = localStorage.getItem(`b${blockIdx}_r${row}_c${col}`) || '';
             const input = createCellInput(col, savedValue, blockIdx, row, col, hasValidDate);
             cell.innerHTML = '';
             cell.appendChild(input);
@@ -471,135 +522,125 @@
   }
   
   async function finishWeekAndGeneratePDF() {
-  if(!hasValidDate) {
-    alert('Primero debes ingresar una fecha de inicio de semana');
-    return;
-  }
-  
-  const firstDate = blocksData[0].date;
-  const lastDate = blocksData[6].date;
-  
-  if(!confirm(`¿Estás seguro?\n\nSe generará un PDF de la semana (${formatDate(firstDate)} al ${formatDate(lastDate)})\n\nLuego se borrarán los datos.`)) {
-    return;
-  }
-  
-  const panel = document.getElementById('panelToCapture');
-  const container = document.getElementById('blocksContainer');
-  const originalMaxHeight = container.style.maxHeight;
-  const originalOverflow = container.style.overflow;
-  
-  // Expandir temporalmente para capturar todo
-  container.style.maxHeight = 'none';
-  container.style.overflow = 'visible';
-  
-  try {
-    const btn = document.getElementById('finishWeekBtn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Generando PDF...';
-    btn.disabled = true;
-    
-    // Pequeño delay para que el DOM se actualice
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Capturar con calidad media pero suficiente
-    const canvas = await html2canvas(panel, {
-      scale: 1.5,
-      backgroundColor: '#121317',
-      logging: false,
-      useCORS: false,
-      allowTaint: false
-    });
-    
-    const imgData = canvas.toDataURL('image/png');
-    const { jsPDF } = window.jspdf;
-    
-    // Orientación vertical (portrait)
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
-    
-    // Dimensiones A4: 210mm x 297mm
-    const pageWidth = 210;
-    const pageHeight = 297;
-    const margin = 10;
-    
-    const imgWidth = pageWidth - (margin * 2);
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
-    // Si la imagen es más alta que la página, escalar para que quepa
-    let finalHeight = imgHeight;
-    let finalWidth = imgWidth;
-    let startY = margin;
-    
-    if (imgHeight > pageHeight - (margin * 2)) {
-      // Escalar para que quepa en la página
-      const scaleFactor = (pageHeight - (margin * 2)) / imgHeight;
-      finalHeight = imgHeight * scaleFactor;
-      finalWidth = imgWidth * scaleFactor;
-      startY = margin;
+    if(!hasValidDate) {
+      alert('Primero debes ingresar una fecha de inicio de semana');
+      return;
     }
     
-    // Centrar horizontalmente
-    const startX = (pageWidth - finalWidth) / 2;
+    const firstDate = blocksData[0].date;
+    const lastDate = blocksData[6].date;
     
-    pdf.addImage(imgData, 'PNG', startX, startY, finalWidth, finalHeight);
+    if(!confirm(`¿Estás seguro?\n\nSe generará un PDF de la semana (${formatDate(firstDate)} al ${formatDate(lastDate)})\n\nLuego se borrarán los datos.`)) {
+      return;
+    }
     
-    const filename = `\( {formatDateForFilename(firstDate)}_a_ \){formatDateForFilename(lastDate)}.pdf`;
-    pdf.save(filename);
+    const panel = document.getElementById('panelToCapture');
+    const container = document.getElementById('blocksContainer');
+    const originalMaxHeight = container.style.maxHeight;
+    const originalOverflow = container.style.overflow;
     
-    // Limpiar todo
-    clearAllCellsData();
-    blocksData = [];
-    for(let i = 0; i < 7; i++) blocksData.push({ date: null });
-    hasValidDate = false;
-    saveBlocksStructure();
+    container.style.maxHeight = 'none';
+    container.style.overflow = 'visible';
     
-    document.getElementById('startDateInput').value = '';
-    document.getElementById('finishWeekBtn').disabled = true;
-    
-    renderAllBlocks();
-    
-    btn.innerHTML = originalText;
-    btn.disabled = false;
-    
-  } catch(error) {
-    console.error('Error:', error);
-    alert('Error al generar el PDF: ' + error.message);
-  } finally {
-    // Restaurar estilos del contenedor
-    container.style.maxHeight = originalMaxHeight;
-    container.style.overflow = originalOverflow;
+    try {
+      const btn = document.getElementById('finishWeekBtn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '⏳ Generando PDF...';
+      btn.disabled = true;
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const canvas = await html2canvas(panel, {
+        scale: 1.5,
+        backgroundColor: '#121317',
+        logging: false,
+        useCORS: false,
+        allowTaint: false
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const { jsPDF } = window.jspdf;
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 10;
+      
+      const imgWidth = pageWidth - (margin * 2);
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let finalHeight = imgHeight;
+      let finalWidth = imgWidth;
+      let startY = margin;
+      
+      if (imgHeight > pageHeight - (margin * 2)) {
+        const scaleFactor = (pageHeight - (margin * 2)) / imgHeight;
+        finalHeight = imgHeight * scaleFactor;
+        finalWidth = imgWidth * scaleFactor;
+        startY = margin;
+      }
+      
+      const startX = (pageWidth - finalWidth) / 2;
+      
+      pdf.addImage(imgData, 'PNG', startX, startY, finalWidth, finalHeight);
+      
+      const filename = `${formatDateForFilename(firstDate)}_a_${formatDateForFilename(lastDate)}.pdf`;
+      pdf.save(filename);
+      
+      clearAllCellsData();
+      blocksData = [];
+      for(let i = 0; i < 7; i++) blocksData.push({ date: null });
+      hasValidDate = false;
+      saveBlocksStructure();
+      
+      document.getElementById('startDateInput').value = '';
+      document.getElementById('finishWeekBtn').disabled = true;
+      
+      renderAllBlocks();
+      
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      
+    } catch(error) {
+      console.error('Error:', error);
+      alert('Error al generar el PDF: ' + error.message);
+    } finally {
+      container.style.maxHeight = originalMaxHeight;
+      container.style.overflow = originalOverflow;
+    }
   }
-}
+  
   function onDateChange(e) {
-  const dateValue = e.target.value;
-  if(!dateValue) {
-    hasValidDate = false;
-    document.getElementById('finishWeekBtn').disabled = true;
-    blocksData = [];
-    for(let i = 0; i < 7; i++) blocksData.push({ date: null });
-    saveBlocksStructure();
-    renderAllBlocks();
-    return;
+    const dateValue = e.target.value;
+    if(!dateValue) {
+      hasValidDate = false;
+      document.getElementById('finishWeekBtn').disabled = true;
+      blocksData = [];
+      for(let i = 0; i < 7; i++) blocksData.push({ date: null });
+      saveBlocksStructure();
+      renderAllBlocks();
+      return;
+    }
+    
+    const parts = dateValue.split('-');
+    const year = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1;
+    const day = parseInt(parts[2]);
+    
+    const startDate = new Date(year, month, day);
+    
+    if(isNaN(startDate.getTime())) return;
+    
+    clearAllCellsData();
+    hasValidDate = true;
+    updateWeekDates(startDate);
+    document.getElementById('finishWeekBtn').disabled = false;
   }
-  
-  // Dividir la fecha en partes para evitar problemas de zona horaria
-  const parts = dateValue.split('-');
-  const year = parseInt(parts[0]);
-  const month = parseInt(parts[1]) - 1;
-  const day = parseInt(parts[2]);
-  
-  const startDate = new Date(year, month, day);
-  
-  if(isNaN(startDate.getTime())) return;
-  
-  clearAllCellsData();
-  hasValidDate = true;
-  updateWeekDates(startDate);
-  document.getElementById('finishWeekBtn').disabled = false;
-}
   
   function initialize() {
     blocksData = [];
@@ -615,7 +656,7 @@
         const y = blocksData[0].date.getFullYear();
         const m = String(blocksData[0].date.getMonth() + 1).padStart(2, '0');
         const d = String(blocksData[0].date.getDate()).padStart(2, '0');
-        dateInput.value = `\( {y}- \){m}-${d}`;
+        dateInput.value = `${y}-${m}-${d}`;
       }
     }
     
